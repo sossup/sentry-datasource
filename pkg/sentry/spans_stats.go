@@ -9,29 +9,6 @@ import (
 
 type SentrySpansStats = map[string]interface{}
 
-var allowedSpansStatsIntervals = []int64{15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 10800, 14400, 21600, 43200, 86400}
-
-func (gei *GetSpansStatsInput) snapInterval() bool {
-	min := time.Duration(allowedSpansStatsIntervals[0]) * time.Second
-	max := time.Duration(allowedSpansStatsIntervals[len(allowedSpansStatsIntervals)-1]) * time.Second
-
-	if gei.Interval < min || gei.Interval > max {
-		return false
-	}
-	nearest := min
-	for _, seconds := range allowedSpansStatsIntervals {
-		valid := time.Duration(seconds) * time.Second
-		if (gei.Interval - valid).Abs() < (gei.Interval - nearest).Abs() {
-			nearest = valid
-		}
-	}
-	if nearest > gei.To.Sub(gei.From) {
-		return false
-	}
-	gei.Interval = nearest
-	return true
-}
-
 type GetSpansStatsInput struct {
 	OrganizationSlug string
 	ProjectIds       []string
@@ -56,9 +33,7 @@ func (gei *GetSpansStatsInput) ToQuery() string {
 	params.Set("query", gei.Query)
 	params.Set("start", gei.From.Format("2006-01-02T15:04:05Z07:00"))
 	params.Set("end", gei.To.Format("2006-01-02T15:04:05Z07:00"))
-	if gei.snapInterval() {
-		params.Set("interval", FormatSentryInterval(gei.Interval))
-	}
+	params.Set("interval", snapSpansStatsInterval(gei.Interval, gei.To.Sub(gei.From)))
 	params.Set("partial", "1")
 	params.Set("excludeOther", "0")
 	params.Set("sampling", "NORMAL")
