@@ -11,15 +11,22 @@ var allowedSpansStatsIntervals = []int64{
 	15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 10800, 14400, 21600, 43200, 86400,
 }
 
-const spansStatsTargetBuckets = 500
+const defaultSpansStatsDataPoints int64 = 800
 
-func snapSpansStatsInterval(interval time.Duration, timeRange time.Duration) string {
+func init() {
 	slices.Sort(allowedSpansStatsIntervals)
+}
 
+func snapSpansStatsInterval(interval time.Duration, timeRange time.Duration, maxDataPoints int64) string {
 	minAllowed := time.Duration(allowedSpansStatsIntervals[0]) * time.Second
 	intervalSuggestion := interval
+
+	resolvedMaxDataPoints := defaultSpansStatsDataPoints
+	if maxDataPoints > 0 {
+		resolvedMaxDataPoints = maxDataPoints
+	}
 	if interval < minAllowed || interval > timeRange {
-		intervalSuggestion = timeRange / spansStatsTargetBuckets
+		intervalSuggestion = timeRange / time.Duration(resolvedMaxDataPoints)
 	}
 	nearest := minAllowed
 	for _, seconds := range allowedSpansStatsIntervals {
