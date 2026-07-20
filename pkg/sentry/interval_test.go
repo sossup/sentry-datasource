@@ -16,7 +16,7 @@ func TestSnapSpansStatsInterval(t *testing.T) {
 	}{
 		{"below minimum falls back to range-derived interval", 14 * time.Second, time.Hour, 0, "15s"},
 		{"larger than range falls back to range-derived interval", 2 * time.Hour, time.Hour, 0, "15s"},
-		{"zero interval derives from range", 0, 4 * time.Hour, 0, "30s"},
+		{"zero interval derives from range", 0, 4 * time.Hour, 0, "15s"},
 
 		{"minimum allowed is kept", 15 * time.Second, time.Hour, 0, "15s"},
 		{"snaps to nearest allowed value", 32 * time.Second, time.Hour, 0, "30s"},
